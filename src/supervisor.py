@@ -7,6 +7,8 @@ from functools import lru_cache
 
 from src.opening_coach import analyze_repertoire, render_repertoire_markdown
 from src.opening_expert import render_lesson_html, teach_opening
+from src.opponent_scout import render_scout_markdown, scout_opponent
+from src.postgame_analyst import analyze_game, render_postgame_markdown
 from src.state import VALID_INTENTS, PersonalGMState, TraceEntry
 
 
@@ -82,24 +84,37 @@ def opening_coach_node(state: PersonalGMState) -> dict:
     }
 
 
-def scout_stub_node(state: PersonalGMState) -> dict:
-    """Phase 2 placeholder."""
+def scout_node(state: PersonalGMState) -> dict:
+    """Run the Opponent Scout specialist."""
 
+    username = state.get("username") or state.get("user_message", "").replace("scout", "").strip()
+    analysis = scout_opponent(username, n_games=100)
     return {
-        "final_text": "⏸ **Opponent Scout** — coming in Phase 2. Not yet implemented.",
+        "final_text": render_scout_markdown(analysis),
         "trace_log": [
-            _trace("opponent_scout", "node", {}, "Phase 2 placeholder")
+            _trace(
+                "opponent_scout",
+                "scout_opponent",
+                {"username": username, "n_games": 100},
+                "opponent scouted",
+            )
         ],
     }
 
 
-def postgame_stub_node(state: PersonalGMState) -> dict:
-    """Phase 2 placeholder."""
+def postgame_node(state: PersonalGMState) -> dict:
+    """Run the Postgame Analyst specialist."""
 
+    analysis = analyze_game(state.get("user_message", ""))
     return {
-        "final_text": "⏸ **Postgame Analyst** — coming in Phase 2. Not yet implemented.",
+        "final_text": render_postgame_markdown(analysis),
         "trace_log": [
-            _trace("postgame_analyst", "node", {}, "Phase 2 placeholder")
+            _trace(
+                "postgame_analyst",
+                "analyze_game",
+                {"input": state.get("user_message", "")[:80]},
+                "game analyzed",
+            )
         ],
     }
 
@@ -121,8 +136,8 @@ def get_graph():
     graph.add_node("supervisor", supervisor_node)
     graph.add_node("ask_opening", opening_expert_node)
     graph.add_node("repertoire", opening_coach_node)
-    graph.add_node("scout", scout_stub_node)
-    graph.add_node("analyze_game", postgame_stub_node)
+    graph.add_node("scout", scout_node)
+    graph.add_node("analyze_game", postgame_node)
     graph.add_edge(START, "supervisor")
     graph.add_conditional_edges(
         "supervisor",

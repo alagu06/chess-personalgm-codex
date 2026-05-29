@@ -1,4 +1,4 @@
-"""Gemini-backed LangChain client for PersonalGM."""
+"""LangChain chat model factory for PersonalGM."""
 
 from __future__ import annotations
 
@@ -14,22 +14,38 @@ def get_chat_model(temperature: float = 0.1) -> BaseChatModel:
 
     load_dotenv()
     provider = os.getenv("CHESS_LLM_PROVIDER", "gemini").strip().lower()
-    if provider != "gemini":
-        raise ValueError("Phase 1 supports CHESS_LLM_PROVIDER=gemini only.")
+    if provider == "gemini":
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("Missing GEMINI_API_KEY. Add it to your .env file.")
 
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("Missing GEMINI_API_KEY. Add it to your .env file.")
+        model = os.getenv("CHESS_LLM_MODEL", "gemini-2.5-flash")
 
-    model = os.getenv("CHESS_LLM_MODEL", "gemini-2.5-flash")
+        from langchain_google_genai import ChatGoogleGenerativeAI
 
-    from langchain_google_genai import ChatGoogleGenerativeAI
+        return ChatGoogleGenerativeAI(
+            model=model,
+            google_api_key=api_key,
+            temperature=temperature,
+        )
 
-    return ChatGoogleGenerativeAI(
-        model=model,
-        google_api_key=api_key,
-        temperature=temperature,
-    )
+    if provider == "litellm":
+        model = os.getenv("CHESS_LLM_MODEL", "gpt-4o-mini")
+        api_key = os.getenv("OPENAI_API_KEY") or os.getenv("LITELLM_API_KEY")
+        base_url = os.getenv("OPENAI_API_BASE") or os.getenv("LITELLM_API_BASE")
+        if not api_key:
+            raise ValueError("Missing OPENAI_API_KEY or LITELLM_API_KEY for LiteLLM.")
+
+        from langchain_openai import ChatOpenAI
+
+        return ChatOpenAI(
+            model=model,
+            api_key=api_key,
+            base_url=base_url,
+            temperature=temperature,
+        )
+
+    raise ValueError("Unsupported CHESS_LLM_PROVIDER. Use gemini or litellm.")
 
 
 def call_llm(messages: list[dict], temperature: float = 0.2) -> str:

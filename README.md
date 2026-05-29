@@ -1,6 +1,6 @@
 # PersonalGM
 
-PersonalGM is a Streamlit web app for amateur chess improvement. Phase 1 includes an AI Opening Expert for structured opening lessons with rendered chess boards, plus a Repertoire Doctor that reviews recent Lichess games and identifies weak opening families.
+PersonalGM is a Streamlit web app for amateur chess improvement. It includes an AI Opening Expert, Repertoire Doctor, Opponent Scout, and Postgame Analyst orchestrated through a LangGraph supervisor.
 
 ## Prerequisites
 
@@ -19,17 +19,27 @@ Copy-Item .env.example .env
 
 Edit `.env` and set `GEMINI_API_KEY` to your Google AI Studio key.
 
+For Postgame Analyst, install Stockfish and set `STOCKFISH_PATH` in `.env`. For a LiteLLM/OpenAI-compatible proxy, set `CHESS_LLM_PROVIDER=litellm`, `CHESS_LLM_MODEL`, `OPENAI_API_KEY`, and `OPENAI_API_BASE`.
+
 ## Run
 
 ```powershell
 streamlit run app.py
 ```
 
-## Phase 1 Status
+## Status
 
 - Opening Expert: ✅
 - Repertoire Doctor: ✅
-- Opponent Scout: ⏸
-- Postgame Analyst: ⏸
+- Opponent Scout: ✅
+- Postgame Analyst: ✅
+- Disk cache: ✅
+- Gemini and LiteLLM provider selection: ✅
 
-Phase 2 adds Opponent Scout, Postgame Analyst with Stockfish, disk-backed caching for instant demo responses, and full streaming across all specialists.
+Cache utilities:
+
+```powershell
+python -m src.cache stats
+python -m src.cache clear
+python -m src.cache clear openings
+```

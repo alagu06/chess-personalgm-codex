@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Optional
 
+from src.cache import cached
 from src.lichess_client import fetch_user_games
 
 TIER_MARKERS = {
@@ -57,6 +58,11 @@ def _summarize_bucket(bucket: dict[str, dict]) -> list[dict]:
     return sorted(stats, key=lambda item: (-item["games"], item["score_pct"], item["family"]))
 
 
+def _repertoire_cache_key(username: str, n_games: int = 50) -> str:
+    return f"{username.lower()}__{n_games}"
+
+
+@cached("repertoire", _repertoire_cache_key)
 def analyze_repertoire(username: str, n_games: int = 50) -> dict:
     """Analyze a Lichess user's opening results by color."""
 

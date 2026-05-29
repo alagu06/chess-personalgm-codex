@@ -9,6 +9,7 @@ from collections.abc import Iterator
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.board_render import fen_with_fallback, render_board_svg
+from src.cache import cached, normalize_key
 from src.llm_client import get_chat_model
 
 SYSTEM_PROMPT = """You are an Opening Expert — a chess master with encyclopedic knowledge of every
@@ -128,6 +129,11 @@ def _messages(opening_name: str, mode: str) -> list:
     ]
 
 
+def _opening_cache_key(opening_name: str, mode: str = "general") -> str:
+    return f"{mode}__{normalize_key(opening_name)}"
+
+
+@cached("openings", _opening_cache_key)
 def teach_opening(opening_name: str, mode: str = "general") -> dict:
     """Blocking version. Returns markdown plus parsed/rendered positions."""
 
